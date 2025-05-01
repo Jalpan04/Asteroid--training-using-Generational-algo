@@ -2,8 +2,7 @@ import pygame
 import math
 import random
 import asyncio
-import pickle
-import os
+import platform
 
 # Initialize Pygame
 pygame.init()
@@ -21,9 +20,9 @@ player_y = HEIGHT // 2
 player_angle = 0
 player_dx = 0
 player_dy = 0
-player_acceleration = 0.05
+player_acceleration = 0.08
 player_max_speed = 4
-player_rotation_speed = 3
+player_rotation_speed = 2
 player_lives = 1
 player_invincible = False
 player_invincible_timer = 0
@@ -51,7 +50,6 @@ asteroids = []
 score = 0
 game_over = False
 game_started = False
-clock = pygame.time.Clock()
 FPS = 60
 
 # Asteroid spawn
@@ -60,7 +58,7 @@ asteroid_spawn_interval = 2000  # milliseconds
 
 # GA + NN
 population_size = 20
-input_size = 4
+input_size = 6
 hidden_size = 10
 output_size = 4
 weights_size = input_size * hidden_size + hidden_size * output_size
@@ -76,16 +74,6 @@ def initialize_population():
     for _ in range(population_size):
         weights = [random.uniform(-1, 1) for _ in range(weights_size)]
         population.append({'weights': weights, 'fitness': 0})
-
-def save_population():
-    with open("population.pkl", "wb") as f:
-        pickle.dump((population, generation, best_survival_time), f)
-
-def load_population():
-    global population, generation, best_survival_time
-    if os.path.exists("population.pkl"):
-        with open("population.pkl", "rb") as f:
-            population, generation, best_survival_time = pickle.load(f)
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
@@ -108,25 +96,38 @@ def neural_network(inputs, weights):
 def get_game_state():
     min_dist = float('inf')
     nearest_angle = 0
+    nearest = None
     player_rad = math.radians(90 - player_angle)
+
     for asteroid in asteroids:
         dx = asteroid['x'] - player_x
         dy = asteroid['y'] - player_y
         dist = math.hypot(dx, dy)
         if dist < min_dist:
             min_dist = dist
+            nearest = asteroid
             abs_angle = math.atan2(-dy, dx)
             rel_angle = (abs_angle - player_rad) % (2 * math.pi)
             if rel_angle > math.pi:
                 rel_angle -= 2 * math.pi
             nearest_angle = rel_angle
-    inputs = [
+
+    if nearest:
+        rel_dx = (nearest['dx'] - player_dx) / 3.0
+        rel_dy = (nearest['dy'] - player_dy) / 3.0
+    else:
+        min_dist = 300
+        nearest_angle = 0
+        rel_dx = rel_dy = 0
+
+    return [
         player_dx / player_max_speed,
         player_dy / player_max_speed,
-        min_dist / 300 if asteroids else 1,
-        nearest_angle / math.pi if asteroids else 0
+        min_dist / 300,
+        nearest_angle / math.pi,
+        rel_dx,
+        rel_dy
     ]
-    return inputs
 
 def evolve_population():
     global population, generation, best_survival_time
@@ -212,7 +213,6 @@ def reset_game():
 
 def check_collisions():
     global score, player_lives, player_invincible, player_invincible_timer, game_over
-    global player_x, player_y, player_dx, player_dy
     if not player_invincible:
         for asteroid in asteroids:
             if math.hypot(player_x - asteroid['x'], player_y - asteroid['y']) < asteroid['size'] / 2 + 10:
@@ -239,108 +239,120 @@ def check_collisions():
                 asteroids.remove(asteroid)
                 break
 
-# Load population if exists
-load_population()
-
-# Initialize if not loaded
-if not population:
+def setup():
     initialize_population()
 
-async def main():
+async def update_loop():
     global running, game_started, game_over, current_agent_idx, score, current_survival_time
     global player_angle, player_x, player_y, player_dx, player_dy, player_lives
     global player_invincible, player_invincible_timer, bullets, asteroids, asteroid_spawn_timer
     global last_shot_time
 
-    running = True
-    while running:
-        screen.fill((0, 0, 0))
+    screen.fill((0, 0, 0))
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                save_population()
-                running = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            running = False
 
-        if not game_started:
-            reset_game()
-        elif game_over:
-            fitness = current_survival_time + score * 3  # Weighted score
-            population[current_agent_idx]['fitness'] = fitness
-            current_agent_idx += 1
-            if current_agent_idx >= population_size:
-                evolve_population()
-                save_population()
-                current_agent_idx = 0
-            reset_game()
-        else:
-            # AI control
-            inputs = get_game_state()
-            actions = neural_network(inputs, population[current_agent_idx]['weights'])
-            rotate_left, rotate_right, thrust, shoot = actions
-            if rotate_left:
-                player_angle += player_rotation_speed
-            if rotate_right:
-                player_angle -= player_rotation_speed
-            rad_angle = math.radians(90 - player_angle)
-            if thrust:
-                player_dx += player_acceleration * math.cos(rad_angle)
-                player_dy -= player_acceleration * math.sin(rad_angle)
-            if shoot:
-                now = pygame.time.get_ticks()
-                if now - last_shot_time > fire_rate:
-                    bullets.append({
-                        'x': player_x + 20 * math.cos(rad_angle),
-                        'y': player_y - 20 * math.sin(rad_angle),
-                        'dx': bullet_speed * math.cos(rad_angle),
-                        'dy': -bullet_speed * math.sin(rad_angle),
-                        'lifetime': 60
-                    })
-                    last_shot_time = now
-
-            # Cap speed
-            speed = math.hypot(player_dx, player_dy)
-            if speed > player_max_speed:
-                player_dx = player_dx / speed * player_max_speed
-                player_dy = player_dy / speed * player_max_speed
-            player_x = (player_x + player_dx) % WIDTH
-            player_y = (player_y + player_dy) % HEIGHT
-
-            # Update bullets
-            for bullet in bullets[:]:
-                bullet['x'] += bullet['dx']
-                bullet['y'] += bullet['dy']
-                bullet['lifetime'] -= 1
-                bullet['x'] %= WIDTH
-                bullet['y'] %= HEIGHT
-                if bullet['lifetime'] <= 0:
-                    bullets.remove(bullet)
-
-            # Update asteroids
-            for asteroid in asteroids:
-                asteroid['x'] += asteroid['dx']
-                asteroid['y'] += asteroid['dy']
-                asteroid['angle'] += asteroid['spin']
-                asteroid['x'] %= WIDTH
-                asteroid['y'] %= HEIGHT
-
-            # Spawn asteroids endlessly
+    if not game_started:
+        reset_game()
+    elif game_over:
+        fitness = current_survival_time + score * 3
+        population[current_agent_idx]['fitness'] = fitness
+        print(f"Agent {current_agent_idx + 1} fitness: {fitness:.2f}")
+        current_agent_idx += 1
+        if current_agent_idx >= population_size:
+            evolve_population()
+            current_agent_idx = 0
+        reset_game()
+    else:
+        # AI control
+        inputs = get_game_state()
+        actions = neural_network(inputs, population[current_agent_idx]['weights'])
+        rotate_left, rotate_right, thrust, shoot = actions
+        if rotate_left:
+            player_angle += player_rotation_speed
+        if rotate_right:
+            player_angle -= player_rotation_speed
+        rad_angle = math.radians(90 - player_angle)
+        if thrust:
+            player_dx += player_acceleration * math.cos(rad_angle)
+            player_dy -= player_acceleration * math.sin(rad_angle)
+        if shoot:
             now = pygame.time.get_ticks()
-            if now - asteroid_spawn_timer > asteroid_spawn_interval:
-                spawn_asteroid()
-                asteroid_spawn_timer = now
+            if now - last_shot_time > fire_rate:
+                bullets.append({
+                    'x': player_x + 20 * math.cos(rad_angle),
+                    'y': player_y - 20 * math.sin(rad_angle),
+                    'dx': bullet_speed * math.cos(rad_angle),
+                    'dy': -bullet_speed * math.sin(rad_angle),
+                    'lifetime': 60
+                })
+                last_shot_time = now
 
-            check_collisions()
-            current_survival_time += 1
+        # Apply velocity damping
+        player_dx *= 0.99
+        player_dy *= 0.99
 
-            # Drawing
-            draw_player()
-            draw_bullets()
-            draw_asteroids()
-            draw_score()
+        # Cap speed
+        speed = math.hypot(player_dx, player_dy)
+        if speed > player_max_speed:
+            player_dx = player_dx / speed * player_max_speed
+            player_dy = player_dy / speed * player_max_speed
+        player_x = (player_x + player_dx) % WIDTH
+        player_y = (player_y + player_dy) % HEIGHT
 
-        pygame.display.update()
+        # Update bullets
+        for bullet in bullets[:]:
+            bullet['x'] += bullet['dx']
+            bullet['y'] += bullet['dy']
+            bullet['lifetime'] -= 1
+            bullet['x'] %= WIDTH
+            bullet['y'] %= HEIGHT
+            if bullet['lifetime'] <= 0:
+                bullets.remove(bullet)
+
+        # Update asteroids
+        for asteroid in asteroids:
+            asteroid['x'] += asteroid['dx']
+            asteroid['y'] += asteroid['dy']
+            asteroid['angle'] += asteroid['spin']
+            asteroid['x'] %= WIDTH
+            asteroid['y'] %= HEIGHT
+
+        # Spawn asteroids
+        now = pygame.time.get_ticks()
+        if now - asteroid_spawn_timer > asteroid_spawn_interval:
+            spawn_asteroid()
+            asteroid_spawn_timer = now
+
+        check_collisions()
+        current_survival_time += 1
+
+        # Drawing
+        draw_player()
+        draw_bullets()
+        draw_asteroids()
+        draw_score()
+
+        # Optional: draw nearest asteroid line
+        if asteroids:
+            nearest = min(asteroids, key=lambda a: math.hypot(player_x - a['x'], player_y - a['y']))
+            pygame.draw.line(screen, (255, 0, 0), (player_x, player_y), (nearest['x'], nearest['y']), 1)
+
+    pygame.display.update()
+
+async def main():
+    global running
+    running = True
+    setup()
+    while running:
+        await update_loop()
         await asyncio.sleep(1.0 / FPS)
-
-if __name__ == "__main__":
-    asyncio.run(main())
     pygame.quit()
+
+if platform.system() == "Emscripten":
+    asyncio.ensure_future(main())
+else:
+    if __name__ == "__main__":
+        asyncio.run(main())
