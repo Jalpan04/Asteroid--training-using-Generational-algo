@@ -259,25 +259,6 @@ Typical performance progression across generations:
 - **Score**: Secondary measure of shooting efficiency
 - **Generation-to-Competence**: Number of generations to reach 30+ seconds survival
 
-## 📁 Project Structure
-
-```
-asteroids-ai/
-├── game_base.py       # Manual gameplay implementation
-├── learning.py        # AI training implementation
-├── models/            # Saved neural network weights
-│   └── best_agent.pkl # Best performing agent
-├── utils/             # Helper functions
-│   ├── rendering.py   # Visualization utilities
-│   ├── physics.py     # Game physics calculations
-│   └── neural.py      # Neural network implementation
-├── assets/            # Game assets
-│   └── sounds/        # Game sound effects
-├── README.md          # Project documentation
-├── requirements.txt   # Dependencies
-└── LICENSE            # MIT License
-```
-
 ## 🚀 Future Improvements
 
 ### Enhanced Neural Network
