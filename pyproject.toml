@@ -1,0 +1,8 @@
+[build-system]
+requires = ["pygbag>=0.2.0"]
+build-backend = "pygbag.build"
+
+[tool.pygbag]
+app = { script = "main.py", window_size = [800, 600] }
+# Optional: customize the HTML title
+#html_title = "Retro Asteroids"
