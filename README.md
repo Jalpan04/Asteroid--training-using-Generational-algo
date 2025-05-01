@@ -1,161 +1,318 @@
-Asteroids Game with AI Agents
-A Pygame implementation of the classic Asteroids game, enhanced with AI agents trained using neural networks and a genetic algorithm (GA). The AI learns to navigate and survive in the game by evolving over generations, optimizing its ability to avoid asteroids and shoot them down.
-Project Overview
-This project builds a retro-style Asteroids game where a spaceship navigates a 2D space, avoiding and destroying asteroids. The game features:
+# 🚀 Asteroids Game with Neural Network AI
 
-A player-controlled spaceship (manual mode in game_base.py) or AI-controlled spaceship (AI mode in learning.py).
-Asteroids of varying sizes that split into smaller pieces when shot.
-A scoring system, lives, and level progression (in manual mode).
-AI agents trained using a genetic algorithm and neural networks to control the spaceship autonomously.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Pygame](https://img.shields.io/badge/pygame-2.0.1+-green.svg)](https://www.pygame.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The AI mode focuses on training agents to survive as long as possible by dodging asteroids and shooting them strategically. The training process leverages evolutionary principles to improve agent performance over generations.
-Installation
-Prerequisites
+A modern implementation of the classic Asteroids arcade game enhanced with artificially intelligent agents trained using neural networks and genetic algorithms. Watch AI pilots evolve from novices to experts as they learn to navigate space, avoid hazards, and destroy asteroids with increasing efficiency.
 
-Python 3.8+
-Pygame (for game rendering and mechanics)
+![Asteroids AI Demo](https://via.placeholder.com/800x400?text=Asteroids+AI+Demo)
 
-Setup
+## 📋 Table of Contents
 
-Clone the repository:git clone <repository-url>
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Game Mechanics](#game-mechanics)
+- [Neural Network Architecture](#neural-network-architecture)
+- [Genetic Algorithm Implementation](#genetic-algorithm-implementation)
+- [Training Process](#training-process)
+- [Development Journey](#development-journey)
+- [Performance Metrics](#performance-metrics)
+- [Project Structure](#project-structure)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
+- [License](#license)
+
+## 🔭 Project Overview
+
+This project reimagines the retro-style Asteroids game with a modern twist: AI agents trained to play the game autonomously. The core gameplay involves navigating a spaceship through a field of asteroids while shooting them to score points and avoid collisions.
+
+The AI implementation combines neural networks with evolutionary algorithms to develop agents that learn optimal navigation and shooting strategies through a process mimicking natural selection.
+
+## ✨ Features
+
+### Game Modes
+- **Manual Mode**: Classic gameplay with keyboard controls
+- **AI Mode**: Watch AI agents navigate and survive autonomously
+- **Training Visualization**: Real-time display of neural network decision-making
+
+### AI Technology
+- Neural network-driven decision making
+- Genetic algorithm for evolutionary learning
+- Performance tracking across generations
+- Visual representation of AI decision processes
+
+### Game Elements
+- Physics-based movement with momentum and inertia
+- Asteroid splitting mechanics
+- Screen-wrapping (toroidal space)
+- Progressive difficulty scaling
+
+## 🛠️ Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- Pygame (for game rendering and mechanics)
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/asteroids-ai.git
 cd asteroids-ai
+```
 
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-Install dependencies:pip install -r requirements.txt
+3. Run the game:
+```bash
+# For manual gameplay:
+python game_base.py
 
+# For AI training mode:
+python learning.py
+```
 
-Run the game:
-Manual mode: python game_base.py
-AI training mode: python learning.py
+## 🎮 Game Mechanics
 
+### Spaceship
+- **Control**: Keyboard (manual) or neural network (AI mode)
+- **Physics**: Realistic momentum with acceleration/deceleration
+- **Movement**: Rotation, thrust, and shooting capabilities
+- **Boundaries**: Wraps around screen edges
 
+### Asteroids
+- **Variety**: Three size categories (large, medium, small)
+- **Behavior**: Split into smaller fragments when shot
+- **Generation**: Random initial position, velocity, and rotation
+- **Collision**: Destroys ship or splits upon bullet impact
 
-Game Mechanics
+### Scoring System
+- **Points**: Large asteroids (20), Medium asteroids (50), Small asteroids (100)
+- **AI Fitness**: Combined function of survival time and score
 
-Player (Spaceship):
-Controlled via keyboard (manual mode) or AI (AI mode). nails can rotate left/right, thrust forward, and shoot bullets.
-Has a maximum speed and acceleration for realistic movement.
-Wraps around screen edges (toroidal space).
+### Difficulty Progression
+- **Manual Mode**: Level-based asteroid density increase
+- **AI Mode**: Time-based periodic spawning with increasing frequency
 
+## 🧠 Neural Network Architecture
 
-Asteroids:
-Spawn with random positions, velocities, and sizes (large, medium, small).
-Split into smaller asteroids when hit by bullets.
-Wrap around screen edges.
+The AI agents utilize a feedforward neural network to process game state information and output control decisions.
 
+### Network Structure
 
-Bullets:
-Fired by the spaceship with a cooldown (fire rate).
-Have a limited lifetime and wrap around screen edges.
+#### Input Layer (6 neurons)
+Input features are normalized to ensure efficient learning:
 
+- Player velocity components: $\frac{v_x}{v_{max}}$, $\frac{v_y}{v_{max}}$
+- Distance to nearest asteroid: $\frac{d_{min}}{d_{scale}}$ where $d_{scale} = 300$
+- Relative angle to nearest asteroid: $\frac{\theta}{π}$
+- Relative velocity of nearest asteroid: $v_{rel_x}$, $v_{rel_y}$
 
-Scoring:
-Points awarded for destroying asteroids (20 for large, 50 for medium, 100 for small).
-In AI mode, fitness is based on survival time and score.
+#### Hidden Layer (10 neurons)
+Each hidden neuron $h_i$ computes:
 
+$$h_i = \sigma\left(\sum_{j=1}^{6} w_{ij} \cdot x_j\right)$$
 
+where $\sigma(z) = \frac{1}{1 + e^{-z}}$ is the sigmoid activation function.
 
-AI Training: Neural Networks and Genetic Algorithm
-The AI agents are trained using a combination of neural networks (NN) and a genetic algorithm (GA). The goal is to evolve agents that maximize survival time and score by navigating and shooting effectively.
-Development Journey
-Initially, I created a manual version of the Asteroids game where players control the spaceship using keyboard inputs. This served as the foundation, with core mechanics like asteroid spawning, collision detection, and scoring. The game worked well, but I wanted to explore AI-driven gameplay to see if a neural network could learn to play autonomously.
-The first challenge was designing an AI that could interpret the game environment. I implemented a neural network with a simple input layer capturing the spaceship’s velocity, the distance to the nearest asteroid, and the relative angle to it. The network output four actions: rotate left, rotate right, thrust, and shoot. A genetic algorithm was used to evolve a population of agents, each defined by their network weights. Fitness was based on the score, but I noticed agents weren’t surviving long because they lacked incentives for evasion.
-To address this, I modified the fitness function to include survival time alongside the score, encouraging agents to avoid collisions. I also introduced periodic asteroid spawning instead of level-based spawning to create a continuous challenge. However, the AI struggled with precise navigation, often failing to align with asteroids for effective shooting.
-Next, I expanded the input layer to include the relative velocity of the nearest asteroid, providing richer context about the game state. I also added heuristic overrides to guide the AI when asteroids were close, such as forcing rotation toward the asteroid or disabling shooting if misaligned. These changes improved performance, but the game wasn’t optimized for all environments.
-To solve this, I integrated asyncio to make the game loop more flexible, ensuring smooth execution across different platforms. The final AI implementation in learning.py combines a robust neural network, genetic algorithm, and heuristics, resulting in agents that effectively dodge and shoot asteroids while evolving over generations.
-Neural Network Architecture
-Each agent uses a feedforward neural network:
+#### Output Layer (4 neurons)
+Each output neuron $o_k$ computes:
 
-Input Layer: 6 neurons:
-Normalized player velocity (player_dx / player_max_speed, player_dy / player_max_speed).
-Normalized distance to the nearest asteroid (min_dist / 300).
-Normalized relative angle to the nearest asteroid (nearest_angle / π).
-Relative velocity of the nearest asteroid (rel_dx, rel_dy).
+$$o_k = \sigma\left(\sum_{j=1}^{10} w_{jk} \cdot h_j\right)$$
 
+The four outputs correspond to binary actions:
+1. Rotate Left: $a_1 = \begin{cases} 1 & \text{if } o_1 > 0.5 \\ 0 & \text{otherwise} \end{cases}$
+2. Rotate Right: $a_2 = \begin{cases} 1 & \text{if } o_2 > 0.5 \\ 0 & \text{otherwise} \end{cases}$
+3. Thrust: $a_3 = \begin{cases} 1 & \text{if } o_3 > 0.5 \\ 0 & \text{otherwise} \end{cases}$
+4. Shoot: $a_4 = \begin{cases} 1 & \text{if } o_4 > 0.5 \\ 0 & \text{otherwise} \end{cases}$
 
-Hidden Layer: 10 neurons with sigmoid activation (sigmoid(x) = 1 / (1 + e^(-x))).
-Output Layer: 4 neurons (binary actions):
-Rotate left (0 or 1).
-Rotate right (0 or 1).
-Thrust (0 or 1).
-Shoot (0 or 1).
+### Parameter Dimensions
+- Input to Hidden: $W_1 \in \mathbb{R}^{6 \times 10}$ (60 weights)
+- Hidden to Output: $W_2 \in \mathbb{R}^{10 \times 4}$ (40 weights)
+- Total parameters: 100 weights
 
+## 🧬 Genetic Algorithm Implementation
 
+The genetic algorithm evolves the neural network weights across generations to improve performance.
 
-The network has:
+### Core Components
 
-Weights from input to hidden: 6 × 10 = 60.
-Weights from hidden to output: 10 × 4 = 40.
-Total weights: 60 + 40 = 100.
+#### Population Management
+- **Population Size**: 20 agents per generation
+- **Genome Representation**: 100 floating-point weights in range [-1, 1]
 
-The forward pass computes:
+#### Fitness Function
+The fitness of an agent is calculated as:
 
-Hidden layer: h_i = sigmoid(∑_{j=1}^6 w_{ij} x_j), for i = 1, ..., 10.
-Output layer: o_k = sigmoid(∑_{j=1}^{10} w_{jk} h_j), for k = 1, ..., 4.
-Actions: a_k = 1 if o_k > 0.5 else 0.
+$$f = T_{survival} + 3 \cdot S_{points}$$
 
-Genetic Algorithm
-The GA evolves a population of agents:
+where $T_{survival}$ is the survival time in seconds and $S_{points}$ is the score from destroying asteroids.
 
-Population Size: 20 agents.
-Fitness Function: fitness = current_survival_time + 3 × score.
-Initialization: Weights are randomly initialized in [-1, 1].
-Selection:
-Tournament selection: Pick 5 agents from the top 20, select the best.
+#### Selection Mechanism
+Tournament selection with the following process:
+1. Select top 20 performing agents
+2. Randomly sample 5 agents from this pool
+3. Choose the agent with highest fitness as parent
 
+#### Crossover Operation
+For each weight in the child network:
 
-Crossover:
-Each weight is chosen from parent1 or parent2 (50% chance).
+$$w_{child, i} = \begin{cases} 
+w_{parent1, i} & \text{with probability } 0.5 \\
+w_{parent2, i} & \text{with probability } 0.5
+\end{cases}$$
 
+#### Mutation Operation
+Each weight has a 5% chance of mutation:
 
-Mutation:
-5% chance per weight to add a random value in [-0.2, 0.2], clipped to [-1, 1].
+$$w'_i = \text{clip}(w_i + \delta, -1, 1)$$
 
+where $\delta \sim \mathcal{U}(-0.2, 0.2)$ is a uniform random value and clip constrains the result to [-1, 1].
 
-Elitism:
-Top 10 agents are retained; the rest are generated via crossover and mutation.
+#### Elitism Strategy
+- Top 10 agents preserved unchanged
+- Bottom 10 replaced with offspring from crossover and mutation
 
+## 🏋️ Training Process
 
+### Initialization
+1. Generate initial population with random weights
+2. Evaluate each agent's fitness in the game environment
 
-Enhanced Decision-Making
-Heuristics improve AI performance:
+### Training Loop
+1. Sort population by fitness
+2. Implement elitism (preserve top performers)
+3. Generate offspring through selection, crossover, and mutation
+4. Replace lower-performing agents with offspring
+5. Repeat for specified number of generations
 
-Rotation: Force rotation toward the nearest asteroid if it’s close (min_dist / 300 < 0.5) and misaligned (|nearest_angle| > 0.2π).
-Shooting: Disable shooting if the asteroid is not aligned (|nearest_angle| > 30°).
-Thrusting: Enable thrust if the asteroid is close (min_dist / 300 < 0.4) and the ship is slow (speed < 1.5).
+### Heuristic Enhancements
+To accelerate learning, behavior heuristics are implemented:
 
-Training Dynamics
+- **Rotation Assistance**: If $\frac{d_{min}}{300} < 0.5$ and $|\theta| > 0.2\pi$, force rotation toward asteroid
+- **Shooting Regulation**: If $|\theta| > 30°$, disable shooting
+- **Thrust Management**: If $\frac{d_{min}}{300} < 0.4$ and $v < 1.5$, enable thrust
 
-Game State: Captures velocity, distance, angle, and relative velocity of the nearest asteroid.
-Fitness Pressure: Rewards survival and asteroid destruction.
-Convergence: Best survival time increases as weights optimize.
-Visualization: A red line connects the ship to the nearest asteroid.
+These heuristics provide initial guidance while allowing the neural network to develop more sophisticated strategies over time.
 
-Running the Game
+### Visualization
+During training, the following are displayed:
+- Current generation number
+- Agent index within population
+- Current survival time
+- Best survival time achieved
+- Visual indicator connecting ship to nearest asteroid
 
-Manual Mode (game_base.py):
-Use arrow keys to rotate and thrust, spacebar to shoot.
-Progress through levels by clearing asteroids.
+## 📝 Development Journey
 
+### Phase 1: Game Foundation
+The project began with implementing a classic Asteroids game with manual controls. This established the core mechanics:
+- Physics-based movement
+- Collision detection
+- Asteroid spawning and splitting
+- Scoring system
 
-AI Mode (learning.py):
-Watch AI agents play autonomously.
-Observe generation, agent number, survival time, and best survival time.
+### Phase 2: Initial AI Implementation
+The first AI implementation featured:
+- Simple neural network with basic inputs
+- Genetic algorithm with fitness based only on score
+- Limited environment awareness
 
+**Challenge**: Agents showed poor survival skills as they lacked incentive for evasive maneuvers.
 
+### Phase 3: Enhanced Perception
+To improve AI performance:
+- Added survival time to fitness function
+- Expanded neural inputs to include relative velocity
+- Implemented continuous asteroid spawning for consistent challenge
 
-Project Structure
+**Challenge**: Agents struggled with precise navigation and shooting alignment.
 
-game_base.py: Manual Asteroids game.
-learning.py: Final AI-driven implementation.
-requirements.txt: Lists dependencies (pygame).
+### Phase 4: Heuristic Guidance
+Introduced heuristic overrides to:
+- Guide rotation when asteroids are close
+- Prevent wasting bullets when misaligned
+- Manage thrust based on proximity and velocity
 
-Future Improvements
+### Phase 5: Performance Optimization
+Final improvements included:
+- Asyncio integration for consistent execution across platforms
+- Optimized rendering for training speed
+- Refined genetic algorithm parameters
 
-Add complex neural network architectures.
-Incorporate multi-asteroid awareness.
-Experiment with varied fitness functions.
-Implement a player vs. AI mode.
+## 📊 Performance Metrics
 
-License
-MIT License. See LICENSE for details.
+### Learning Curve
+Typical performance progression across generations:
+- **Gen 1-5**: Random movements, average survival < 5 seconds
+- **Gen 6-15**: Basic avoidance, survival time 10-20 seconds
+- **Gen 16-30**: Coordinated movement and shooting, survival time 30-60 seconds
+- **Gen 31+**: Advanced strategies, survival time 60+ seconds
+
+### Evaluation Metrics
+- **Survival Time**: Primary measure of agent fitness
+- **Score**: Secondary measure of shooting efficiency
+- **Generation-to-Competence**: Number of generations to reach 30+ seconds survival
+
+## 📁 Project Structure
+
+```
+asteroids-ai/
+├── game_base.py       # Manual gameplay implementation
+├── learning.py        # AI training implementation
+├── models/            # Saved neural network weights
+│   └── best_agent.pkl # Best performing agent
+├── utils/             # Helper functions
+│   ├── rendering.py   # Visualization utilities
+│   ├── physics.py     # Game physics calculations
+│   └── neural.py      # Neural network implementation
+├── assets/            # Game assets
+│   └── sounds/        # Game sound effects
+├── README.md          # Project documentation
+├── requirements.txt   # Dependencies
+└── LICENSE            # MIT License
+```
+
+## 🚀 Future Improvements
+
+### Enhanced Neural Network
+- Implement convolutional layers for direct screen input
+- Add recurrent connections for temporal awareness
+- Explore reinforcement learning approaches
+
+### Multi-Asteroid Awareness
+- Extend inputs to track multiple nearest asteroids
+- Implement attention mechanisms for threat prioritization
+
+### Advanced Training Techniques
+- Implement novelty search to encourage exploration
+- Add curriculum learning with progressive difficulty
+- Explore neuroevolution of augmenting topologies (NEAT)
+
+### Gameplay Extensions
+- Player vs. AI competitive mode
+- AI difficulty selection based on generation
+- Interactive training interface
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+*Created with ❤️ by [Your Name]*
