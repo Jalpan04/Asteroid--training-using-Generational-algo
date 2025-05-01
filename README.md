@@ -8,22 +8,6 @@ A modern implementation of the classic Asteroids arcade game enhanced with artif
 
 ![Asteroids AI Demo](https://via.placeholder.com/800x400?text=Asteroids+AI+Demo)
 
-## 📋 Table of Contents
-
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Installation](#installation)
-- [Game Mechanics](#game-mechanics)
-- [Neural Network Architecture](#neural-network-architecture)
-- [Genetic Algorithm Implementation](#genetic-algorithm-implementation)
-- [Training Process](#training-process)
-- [Development Journey](#development-journey)
-- [Performance Metrics](#performance-metrics)
-- [Project Structure](#project-structure)
-- [Future Improvements](#future-improvements)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## 🔭 Project Overview
 
 This project reimagines the retro-style Asteroids game with a modern twist: AI agents trained to play the game autonomously. The core gameplay involves navigating a spaceship through a field of asteroids while shooting them to score points and avoid collisions.
