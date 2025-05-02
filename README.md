@@ -6,7 +6,7 @@
 
 A modern implementation of the classic Asteroids arcade game enhanced with artificially intelligent agents trained using neural networks and genetic algorithms. Watch AI pilots evolve from novices to experts as they learn to navigate space, avoid hazards, and destroy asteroids with increasing efficiency.
 
-![Asteroids AI Demo](https://via.placeholder.com/800x400?text=Asteroids+AI+Demo)
+<img src="screenshot.png" alt="Asteroids AI Demo" width="300"/>
 
 ## 🔭 Project Overview
 
