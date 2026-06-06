@@ -1,5 +1,7 @@
 # 🚀 Asteroids Game with Neural Network AI
 
+![GitHub top language](https://img.shields.io/github/languages/top/Jalpan04/Asteroid-game-ai) ![GitHub repo size](https://img.shields.io/github/repo-size/Jalpan04/Asteroid-game-ai) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Pygame](https://img.shields.io/badge/pygame-2.0.1+-green.svg)](https://www.pygame.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
